@@ -19,6 +19,7 @@ library(XML)
 library(RCurl)
 library(rlist)
 library(stringr)
+library(argparser)
 
 #library(extrafont)
 #extrafont::loadfonts()
@@ -47,7 +48,14 @@ source("R/lib/sql.r")
 today <- Sys.Date()
 heute <- format(today, "%Y%m%d")
 
-col <- c('black','red','green', 'yellow','purple','brown','grey','blue','cyan','orange')
+args = commandArgs(trailingOnly=TRUE)
+
+if (length(args) == 0) {
+  FromDay <- NA
+  
+} else if (length(args) == 1) {
+  FromDay <- as.Date(args[1])
+}
 
 Institute <- data.frame(
   Name = c(
@@ -72,10 +80,13 @@ Institute <- data.frame(
     )
 )
 
+ParteiFarbe <- data.frame(
+  Name = c('AfD', 'CDU_CSU', 'LINKE', 'FDP', 'FW','GRÜNE', 'PDS', 'PIRATEN', 'REP', 'SPD', 'SSW', 'Sonstige')
+  , Color = c('brown', 'black', 'purple', 'yellow', 'cyan', 'green', 'purple', 'grey', 'brown', 'red', 'blue', 'orange')
+)
 
 for (INo in 1:nrow(Institute)) {
-#for ( INo in 7:7 ) {
-  
+
   print (Institute$Name[INo])
   
   png( paste( 
@@ -86,7 +97,7 @@ for (INo in 1:nrow(Institute)) {
     , '.png'
     , sep = ""
     )
-    , width = 1920
+    , width = 1980
     , height = 1080
   )
   par( mar = c(10,5,5,5))
@@ -102,10 +113,11 @@ for (INo in 1:nrow(Institute)) {
   namen[2] <- 'CDU_CSU'
   colnames(umfragen) <- namen
   NoParteien <- match('Sonstige',namen)
-  
-  umfragen[,NoParteien+1] <- NULL
 
+  umfragen[,NoParteien+1] <- NULL
   umfragen[,1] <- as.Date(umfragen[,1],"%d.%m.%Y")
+  
+  namen <- colnames(umfragen)
   
   for (i in 2:(NoParteien-1)) {
     umfragen[,i] <- as.numeric(str_replace(str_replace(str_replace_all(umfragen[,i]," %", ""),",","."),'(–-?)',"0"))
@@ -115,7 +127,14 @@ for (INo in 1:nrow(Institute)) {
   umfragen$Befragte[umfragen$Befragte=='Bundestagswahl'] <- 60000000
 
   umfragen$Befragte <- as.numeric(str_remove(str_remove(umfragen$Befragte, '.* '), '\\.'))
-
+  
+  col <- ParteiFarbe$Color[match(namen[2:NoParteien],ParteiFarbe$Name)]
+  print(col)
+  
+  if (! is.na(FromDay) ) {
+    umfragen <- umfragen[umfragen$Datum >= FromDay,]
+  }
+  
   plot( 
       umfragen[,1]
     , rep(NA,nrow(umfragen))
@@ -127,7 +146,7 @@ for (INo in 1:nrow(Institute)) {
     , xlab = 'Datum'
     , ylab = 'Anteil [%]'
     , cex.main = 4
-    , cex.sub = 3
+    , cex.sub = 1
     , ylim = c(0,60)
   )
 
@@ -140,7 +159,7 @@ for (INo in 1:nrow(Institute)) {
   legend( 
       'topright'
     , title = ' Parteien'
-    , legend = colnames(umfragen[,2:NoParteien])
+    , legend = str_replace_all(colnames(umfragen[,2:NoParteien]),'_','/')
     , lty = 1
     , lwd = 2
     , col = col
@@ -148,17 +167,21 @@ for (INo in 1:nrow(Institute)) {
     , inset = 0.05
 
   )
-
-  ra <- lm( CDU_CSU ~ Datum, data = umfragen )
-  abline(
-      coef = ra$coefficients
-    , col = col[1]
-    , lty = 2
-    , lwd =5
+  legend( 
+    'topleft'
+    , title = 'Bundestagswahlen'
+    , legend = 'Wahlergebnis'
+    , pch = 19
+    , lty = 1
+    , lwd = 2
+    , col = 'black'
+    , cex = 2
+    , inset = 0.05
   )
+  
 
   for ( i in 2:NoParteien ) {
-    lines(
+      lines(
         umfragen[,1]
       , umfragen[,i]
       , type='l'
@@ -170,15 +193,17 @@ for (INo in 1:nrow(Institute)) {
         umfragen[umfragen$Befragte==60000000,1]
       , umfragen[umfragen$Befragte==60000000,i]
       , type = 'p'
-      , pch = 21
-      , col =col[i-1]
+      , pch = 19
+      , col = col[i-1]
       , lwd = 20
     )
   
     f <- as.formula(paste( namen[i], "~", "Datum"))
   
     ra <- lm( f, data = umfragen)
-  
+    print(namen[i])
+    print(ra$coefficients[1]+as.numeric(today)*ra$coefficients[2])
+    
     abline( 
         coef = ra$coefficients
       , col = col[i-1]

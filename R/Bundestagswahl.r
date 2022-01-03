@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 options(OutDec=',')
-MyScriptName <- "Wahlumfragen"
+MyScriptName <- "Umfragen"
 
 require(data.table)
 library(tidyverse)
@@ -52,8 +52,6 @@ ParteiFarbe <- data.frame(
   , Color = c('brown','black','darkgrey','purple','yellow', 'green', 'red','blue', 'orange')
 )
 
-
-
 for (wahljahr in c(2013,2017,2021)) {
   
   par( mar = c(10,5,5,5))
@@ -63,12 +61,15 @@ for (wahljahr in c(2013,2017,2021)) {
   
   tables <- readHTMLTable(HTML)
 
+  # Auswertung der Sitzverteilung
+  
   erg_sitze <- tables[[1]]
   erg_sitze <- data.frame(
     Partei = factor(erg_sitze[[1]], levels = erg_sitze[[1]])
     , Sitze = as.numeric(erg_sitze[[2]])
     , Diff = as.numeric(erg_sitze[[3]])
   )
+  
   col <- ParteiFarbe$Color[match(erg_sitze$Partei,ParteiFarbe$Name)]
   print(col)
   
@@ -86,17 +87,39 @@ for (wahljahr in c(2013,2017,2021)) {
     ) +
     theme_minimal()
   
-  ggsave(
-    paste('png/BTW', wahljahr, 'Sitze.png', sep='')
-    , plot = pp
-    , type = "cairo-png",  bg = "white"
-    , width = 29.7
-    , height = 21
-    , units = "cm"
-    , dpi = 150
-  )
-  erg_beteiligung <- tables[[2]]
-  erg_parteien <- tables[[3]]
-  pp
+  # ggsave(
+  #   paste('png/BTW', wahljahr, 'Sitze.png', sep='')
+  #   , plot = pp
+  #   , type = "cairo-png"
+  #   , bg = "white"
+  #   , width = 880
+  #   , height = 440
+  #   , units = "px"
+  #   , dpi = 150
+  # )
   
+  # Work-a-round because set^ting units = 'px' gives an error.
+  
+  png(
+     paste('png/BTW', wahljahr, 'Sitze.png', sep='')
+   , width = 880
+   , height = 440
+ )
+  print(pp)
+  
+  dev.off()
+  
+  # Auswerung der Wahlbeteiligung
+  
+  erg_beteiligung <- tables[[2]]
+  
+  # Auswertung der Stimmverteilung
+  
+  ep <- tables[[3]]
+  
+  erg_parteien <- data.frame(
+    Partei = factor(ep[[1]], levels = ep[[1]])
+    , ErstStimmen = as.numeric(str_remove_all(str_replace_all(ep[[2]], '([-–])', '0'), '\\.'))
+    , ZweitStimmen = as.numeric(str_remove_all(str_replace_all(ep[[5]], '([-–])', '0'), '\\.'))
+  )
 }
