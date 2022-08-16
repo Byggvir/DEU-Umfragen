@@ -6,9 +6,9 @@ RunSQL <- function (
   SQL = 'select * from Faelle;'
   , prepare="set @i := 1;") {
   
-  rmariadb.settingsfile <- "/data/git/SARS-CoV-2-in-DE/SQL/rki.cnf"
+  rmariadb.settingsfile <- path.expand('~/R/sql.conf.d/Umfragen.conf')
   
-  rmariadb.db <- "RKI"
+  rmariadb.db <- "Umfragen"
   
   DB <- dbConnect(
     RMariaDB::MariaDB()
@@ -33,9 +33,9 @@ ExecSQL <- function (
   SQL 
 ) {
   
-  rmariadb.settingsfile <- "/data/git/SARS-CoV-2-in-DE/SQL/rki.cnf"
+  rmariadb.settingsfile <- path.expand('~/R/sql.conf.d/Umfragen.conf')
   
-  rmariadb.db <- "RKI"
+  rmariadb.db <- "Umfragen"
   
   DB <- dbConnect(
     RMariaDB::MariaDB()
