@@ -6,7 +6,6 @@ MyScriptName <- "Wahlumfragen"
 
 require(data.table)
 library(tidyverse)
-# library(REST)
 library(grid)
 library(gridExtra)
 library(gtable)
@@ -84,6 +83,7 @@ for (I in unique(umfragen$Institut) ) {
     geom_smooth( aes(fill = Partei), method = 'glm' ) + 
     geom_line( aes(colour = Partei)) +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Institut == I ), size = 3 )+
+    geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     scale_x_date( date_labels = "%Y" ) +
     scale_y_continuous( labels = scales::percent ) +
     scale_color_manual( values = ParteiFarbe$Color, breaks = ParteiFarbe$Name) +
@@ -119,6 +119,7 @@ for (P in unique(umfragen$Partei ) ) {
   ) +
     geom_smooth( aes(fill = Partei), method = 'glm' ) +
     geom_line( aes(colour = Partei)) +
+    geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
     scale_x_date( date_labels = "%Y" ) +
     scale_y_continuous( labels = scales::percent ) +
@@ -136,6 +137,39 @@ for (P in unique(umfragen$Partei ) ) {
   ggsave(   filename = paste( outdir
                               , 'Partei_'
                               , str_replace(P, '/' , '_' )
+                              , '-S.png'
+                              , sep='')
+            , plot = PT
+            , device = "png"
+            , bg = "white"
+            , width = 29.1
+            , height = 21
+            , units = "cm"
+  )
+  
+  umfragen %>% filter( Partei == P ) %>% ggplot(
+    aes ( x = Datum, y = Ergebnis )
+  ) +
+    geom_smooth( aes(fill = Partei), method = 'glm' ) +
+    geom_line( aes(colour = Partei)) +
+    geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
+    geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
+    scale_x_date( date_labels = "%Y" ) +
+    scale_y_continuous( labels = scales::percent ) +
+    scale_color_manual( values = ParteiFarbe$Color, breaks = ParteiFarbe$Name) +
+    expand_limits( y = 0 ) +
+    facet_wrap(vars(Institut)) +
+    theme_ipsum() +
+    labs(  title = paste( "Umfragen und Wahlergebnisse Bundestag" )
+           , subtitle = paste( P )
+           , colour  = "Partei"
+           , x = "Datum"
+           , y = "Ergebnis"
+           , caption = citation )  -> PT
+  
+  ggsave(   filename = paste( outdir
+                              , 'Partei_'
+                              , str_replace(P, '/' , '_' )
                               , '-L.png'
                               , sep='')
             , plot = PT
@@ -145,7 +179,7 @@ for (P in unique(umfragen$Partei ) ) {
             , height = 21
             , units = "cm"
   )
-
+  
 }
 
   

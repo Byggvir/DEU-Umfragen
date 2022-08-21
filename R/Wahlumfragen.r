@@ -5,7 +5,6 @@ MyScriptName <- "Wahlumfragen"
 
 require(data.table)
 library(tidyverse)
-# library(REST)
 library(grid)
 library(gridExtra)
 library(gtable)
@@ -20,9 +19,6 @@ library(RCurl)
 library(rlist)
 library(stringr)
 library(argparser)
-
-#library(extrafont)
-#extrafont::loadfonts()
 
 # Set Working directory to git root
 
