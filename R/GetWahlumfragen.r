@@ -6,7 +6,6 @@ MyScriptName <- "GetWahlumfragen"
 
 require(data.table)
 library(tidyverse)
-#library(REST)
 library(grid)
 library(gridExtra)
 library(gtable)
@@ -82,11 +81,13 @@ for (INo in 1:nrow(Institute)) {
   umfragen$Befragte <- as.numeric(str_remove(str_remove(umfragen$Befragte, '.* '), '\\.'))
   
 
-Datum <- as.Date(NULL)
-Ergebnis <- as.numeric(NULL)
-Parteiname <- NULL
-Befragte <- as.numeric(NULL)              
+  Datum <- as.Date(NULL)
+  Ergebnis <- as.numeric(NULL)
+  Parteiname <- NULL
+  Befragte <- as.numeric(NULL)              
+  
   for ( i in 2:NoParteien ) {
+  
     Datum <- c(Datum,umfragen$Datum)    
     Ergebnis <- c(Ergebnis,umfragen[,i]/100)
     Parteiname <- c(Parteiname,rep(colnames(umfragen)[i],nrow(umfragen)))
@@ -96,7 +97,7 @@ Befragte <- as.numeric(NULL)
 
   umfragen2 <- data.table(
     Datum = Datum
-    , Institut = rep(Institute$Name[INo],length(Datum))
+    , Institut = rep(Institute$Id[INo],length(Datum))
     , Partei = Parteiname
     , Ergebnis = Ergebnis
     , Befragte = Befragte

@@ -21,9 +21,6 @@ library(rlist)
 library(stringr)
 library(argparser)
 
-#library(extrafont)
-#extrafont::loadfonts()
-
 # Set Working directory to git root
 
 if (rstudioapi::isAvailable()){
@@ -60,8 +57,7 @@ if (length(args) == 0) {
 }
 
 outdir <- 'png/Umfragen/'
-
-dir.create( outdir , showWarnings = TRUE, recursive = FALSE, mode = "0777")
+dir.create( outdir , showWarnings = FALSE, recursive = FALSE, mode = "0777")
 
 citation <- paste( '© Thomas Arend, 2022\nQuelle: © wahlrecht.de/umfragen\nStand', heute)
 
@@ -70,10 +66,11 @@ ParteiFarbe <- data.frame(
   , Color = c( 'black',   'red', 'yellow', 'cyan', 'green', 'purple', 'purple', 'grey',    'brown', 'blue', 'brown', 'orange'  )
 )
 
-umfragen <- RunSQL('select * from Umfragen;')
+umfragen <- RunSQL('select * from Umfragen as U join Institute as I on U.IId = I.Id;')
+
 umfragen$Partei <- factor( umfragen$Partei, levels = ParteiFarbe$Name, labels = ParteiFarbe$Name) 
 
-umfragen$Institut <- factor( umfragen$Institut, levels = Institute$Name, labels = Institute$Shortname) 
+umfragen$Institut <- factor( umfragen$IId, levels = Institute$Id, labels = Institute$Shortname) 
 
 for (I in unique(umfragen$Institut) ) {
   
@@ -105,9 +102,10 @@ for (I in unique(umfragen$Institut) ) {
             , plot = PI
             , device = "png"
             , bg = "white"
-            , width = 29.1
-            , height = 21
-            , units = "cm"
+            , width = 1920
+            , height = 1080
+            , units = "px"
+            , dpi = 144
   )
 
 }
@@ -121,7 +119,7 @@ for (P in unique(umfragen$Partei ) ) {
     geom_line( aes(colour = Partei)) +
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
-    scale_x_date( date_labels = "%Y" ) +
+    scale_x_date( date_labels = "%Y-%b" ) +
     scale_y_continuous( labels = scales::percent ) +
     scale_color_manual( values = ParteiFarbe$Color, breaks = ParteiFarbe$Name) +
     expand_limits( y = 0 ) +
@@ -141,10 +139,11 @@ for (P in unique(umfragen$Partei ) ) {
                               , sep='')
             , plot = PT
             , device = "png"
-            , bg = "white"
-            , width = 29.1
-            , height = 21
-            , units = "cm"
+            , bg = "lightgrey"
+            , width = 1920
+            , height = 1080
+            , units = "px"
+            , dpi = 144
   )
   
   umfragen %>% filter( Partei == P ) %>% ggplot(
@@ -154,7 +153,7 @@ for (P in unique(umfragen$Partei ) ) {
     geom_line( aes(colour = Partei)) +
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
-    scale_x_date( date_labels = "%Y" ) +
+    scale_x_date( date_labels = "%Y-%b" ) +
     scale_y_continuous( labels = scales::percent ) +
     scale_color_manual( values = ParteiFarbe$Color, breaks = ParteiFarbe$Name) +
     expand_limits( y = 0 ) +
@@ -174,10 +173,11 @@ for (P in unique(umfragen$Partei ) ) {
                               , sep='')
             , plot = PT
             , device = "png"
-            , bg = "white"
-            , width = 29.1
-            , height = 21
-            , units = "cm"
+            , bg = "lightgrey"
+            , width = 1920
+            , height = 1080
+            , units = "px"
+            , dpi = 144
   )
   
 }
@@ -206,8 +206,9 @@ for (P in unique(umfragen$Partei ) ) {
             , plot = IB
             , device = "png"
             , bg = "white"
-            , width = 29.1
-            , height = 21
-            , units = "cm"
+            , width = 1920
+            , height = 1080
+            , units = "px"
+            , dpi = 144
   )
   
