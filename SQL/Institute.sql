@@ -7,6 +7,7 @@ CREATE TABLE `Institute` (
   `Name` char(255) DEFAULT NULL ,
   `url` char(255) DEFAULT NULL ,
   `Shortname` char(16) DEFAULT NULL ,
+  `autoupdate` boolean DEFAULT FALSE ,
   PRIMARY KEY (`Id`) ,
   INDEX ( `Name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;

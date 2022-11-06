@@ -22,3 +22,4 @@ limbounds <- function (x, zeromin=TRUE) {
   # print(factor)
   return ( c(floor(range[1]/factor),ceiling(range[2]/factor)) * factor) 
 }
+

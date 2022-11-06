@@ -14,7 +14,7 @@ CREATE TABLE `Umfragen` (
 LOAD DATA LOCAL 
 INFILE '/tmp/Umfragen.csv'      
 INTO TABLE `Umfragen`
-FIELDS TERMINATED BY ','
+FIELDS TERMINATED BY ';'
 IGNORE 0 ROWS;
 
 DELETE FROM `Umfragen` where Datum = '2017-02-02' and IId = 8;
