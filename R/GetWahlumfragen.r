@@ -42,67 +42,109 @@ setwd(WD)
 source("R/lib/sql.r")
 source("R/lib/Institute.r")
 
-Institute <- RunSQL('select * from Institute;')
+Institute <- RunSQL( 'select * from Institute;')
+Parteien <- RunSQL( 'select * from Partei;' )
 
 CSVOUT <- '/tmp/Umfragen.csv'
 
 if (file.exists(CSVOUT)) {
+
   unlink(CSVOUT)
+
 }
 
 for (INo in 1:nrow(Institute)) {
 
-  print (Institute$Name[INo])
+  if ( Institute$autoupdate[INo] > 0 ) {
+  print( Institute$Name[INo] )
   
-  HTML <- getURL(Institute$url[INo],.opts = list(ssl.verifypeer = FALSE), .encoding = 'UTF-8' )
+  HTML <- getURL( Institute$url[INo]
+                  , .opts = list( ssl.verifypeer = FALSE )
+                  , .encoding = 'UTF-8' )
 
   tables <- readHTMLTable(HTML)
 
   umfragen <- tables[[2]]
   umfragen[,2] <- NULL
+  
   namen <- colnames(umfragen)
   namen[1] <- 'Datum'
   namen[2] <- 'CDU/CSU'
-  colnames(umfragen) <- namen
-  NoParteien <- match('Sonstige',namen)
+  colnames( umfragen ) <- namen
+  NoParteien <- match( 'Sonstige'
+                       , namen )
 
-  umfragen[,NoParteien+1] <- NULL
-  umfragen[,1] <- as.Date(umfragen[,1],"%d.%m.%Y")
+  umfragen[, NoParteien + 1] <- NULL
+  umfragen[, 1] <- as.Date( umfragen[,1], "%d.%m.%Y" )
   
-  namen <- colnames(umfragen)
+  namen <- colnames( umfragen )
   
-  for (i in 2:(NoParteien-1)) {
-    umfragen[,i] <- as.numeric(str_replace(str_replace(str_replace_all(umfragen[,i]," %", ""),",","."),'(–-?)',"0"))
-  }
-
-  umfragen[,NoParteien] <- 100 - rowSums(umfragen[,2:(NoParteien-1)])
-  umfragen$Befragte[umfragen$Befragte=='Bundestagswahl'] <- NA
-
-  umfragen$Befragte <- as.numeric(str_remove(str_remove(umfragen$Befragte, '.* '), '\\.'))
+  for (i in 2:(NoParteien - 1) ) {
   
+      umfragen[, i] <- as.numeric( 
+                          str_replace(
+                            str_replace(
+                              str_replace_all(
+                                str_replace_all(
+                                  umfragen[, i]
+                                  , " %"
+                                  , "" )
+                                , "%"
+                                , "" )
+                              , ","
+                              , "."
+                              )
+                            , '(–-?)'
+                            , "0" 
+                            ) 
+                          )
+  
+  } # end for
 
-  Datum <- as.Date(NULL)
-  Ergebnis <- as.numeric(NULL)
+  umfragen[,NoParteien] <- 100 - rowSums( umfragen[, 2:(NoParteien - 1) ])
+  umfragen$Befragte[ umfragen$Befragte == 'Bundestagswahl' ] <- NA
+
+  umfragen$Befragte <- as.numeric(
+                          str_remove(
+                            str_remove(
+                              umfragen$Befragte
+                              , '.* '
+                              )
+                            , '\\.'
+                            )
+                          )
+  
+  Datum <- as.Date( NULL )
+  Ergebnis <- as.numeric( NULL )
   Parteiname <- NULL
-  Befragte <- as.numeric(NULL)              
+  Befragte <- as.numeric( NULL )
   
   for ( i in 2:NoParteien ) {
   
-    Datum <- c(Datum,umfragen$Datum)    
-    Ergebnis <- c(Ergebnis,umfragen[,i]/100)
-    Parteiname <- c(Parteiname,rep(colnames(umfragen)[i],nrow(umfragen)))
-    Befragte <- c(Befragte,umfragen$Befragte)
+    Datum <- c( Datum, umfragen$Datum )    
+    Ergebnis <- c( Ergebnis, umfragen[, i]/100)
+    Parteiname <- c( Parteiname, rep( colnames( umfragen )[i], nrow( umfragen ) ) )
+    Befragte <- c( Befragte, umfragen$Befragte )
   
   }
 
-  umfragen2 <- data.table(
-    Datum = Datum
-    , Institut = rep(Institute$Id[INo],length(Datum))
-    , Partei = Parteiname
-    , Ergebnis = Ergebnis
-    , Befragte = Befragte
+  write.table( data.table(
+      Datum = Datum
+      , Institut = rep( Institute$Id[ INo ], length( Datum ) )
+      , Partei = Parteiname
+      , Ergebnis = Ergebnis
+      , Befragte = Befragte
+    )
+    , file = CSVOUT
+    , append = TRUE
+    , sep = ';'
+    , dec = '.'
+    , quote = FALSE
+    , row.names = FALSE
+    , col.names = FALSE
   )
   
-  write.table( umfragen2, file = CSVOUT, append = TRUE, sep = ',' , dec = '.', quote = FALSE , row.names = FALSE, col.names = FALSE)
-  
+  }
 }
+
+system('/data/git/R/DEU-Umfragen/bash/wahlkreisprognose')
