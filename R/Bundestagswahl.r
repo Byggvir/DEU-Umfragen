@@ -1,11 +1,10 @@
 #!/usr/bin/env Rscript
 
-options(OutDec=',')
+options( OutDec = ',' )
 MyScriptName <- "Umfragen"
 
 require(data.table)
 library(tidyverse)
-library(REST)
 library(grid)
 library(gridExtra)
 library(gtable)
@@ -14,14 +13,11 @@ library(ggplot2)
 library(viridis)
 library(hrbrthemes)
 library(scales)
-library(Cairo)
+library(ragg)
 library(XML)
 library(RCurl)
 library(rlist)
 library(stringr)
-
-#library(extrafont)
-#extrafont::loadfonts()
 
 # Set Working directory to git root
 
@@ -56,7 +52,7 @@ for (wahljahr in c(2013,2017,2021)) {
   
   par( mar = c(10,5,5,5))
  
-  HTML <- getURL(paste('https://www.bundeswahlleiter.de/bundestagswahlen/',wahljahr,'/ergebnisse/bund-99.html', sep=''),.opts = list(ssl.verifypeer = FALSE), .encoding = 'UTF-8' )
+  HTML <- getURL(paste('https://www.bundeswahlleiterin.de/bundestagswahlen/',wahljahr,'/ergebnisse/bund-99.html', sep=''),.opts = list(ssl.verifypeer = FALSE), .encoding = 'UTF-8' )
   HTML <- str_replace(HTML,'</tbody><tbody>','</tbody></table><table><tbody>')
   
   tables <- readHTMLTable(HTML)
@@ -87,28 +83,18 @@ for (wahljahr in c(2013,2017,2021)) {
     ) +
     theme_minimal()
   
-  # ggsave(
-  #   paste('png/BTW', wahljahr, 'Sitze.png', sep='')
-  #   , plot = pp
-  #   , type = "cairo-png"
-  #   , bg = "white"
-  #   , width = 880
-  #   , height = 440
-  #   , units = "px"
-  #   , dpi = 150
-  # )
+  ggsave(
+    paste('png/BTW', wahljahr, 'Sitze.png', sep='')
+    , plot = pp
+    , device = 'png'
+    , bg = "white"
+    , width = 880
+    , height = 440
+    , units = "px"
+    , dpi = 150
+  )
   
-  # Work-a-round because set^ting units = 'px' gives an error.
-  
-  png(
-     paste('png/BTW', wahljahr, 'Sitze.png', sep='')
-   , width = 880
-   , height = 440
- )
-  print(pp)
-  
-  dev.off()
-  
+
   # Auswerung der Wahlbeteiligung
   
   erg_beteiligung <- tables[[2]]

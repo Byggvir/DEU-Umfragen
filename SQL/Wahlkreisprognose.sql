@@ -1,5 +1,14 @@
 use Umfragen;
 
+drop table if exists wkp;
+
+create temporary table wkp 
+  ( Datum date
+  , Befragte bigint(20)
+  , primary key (Datum)
+  ) 
+select Datum, Befragte from wahlkreisprognose;
+
 drop table if exists wahlkreisprognose;
 create table if not exists wahlkreisprognose
   ( Datum DATE
@@ -10,14 +19,16 @@ create table if not exists wahlkreisprognose
   , AFD double
   , LINKE double
   , Sonstige double
-  , Befragte bigint(20)
+  , Befragte bigint(20) default 1300
   , primary key (Datum));
-  
+
 LOAD DATA LOCAL 
 INFILE '/tmp/wahlkreisprognose.csv'      
 INTO TABLE `wahlkreisprognose`
 FIELDS TERMINATED BY ';'
 IGNORE 0 ROWS;
+
+update wahlkreisprognose as w join wkp as b on w.Datum = b.Datum set w.Befragte = b.Befragte; 
 
 delete from Umfragen where IId = 10;
 

@@ -83,6 +83,9 @@ for (I in unique(umfragen$Institut) ) {
     expand_limits( y = 0 ) +
     facet_wrap(vars(Partei)) +
     theme_ipsum() +
+    theme(
+      axis.text.x = element_text( angle = 90)
+    ) +
     labs(  title = paste( "Umfragen und Wahlergebnisse Bundestag" )
            , subtitle = paste( I )
            , colour  = "Partei"
@@ -106,12 +109,16 @@ for (I in unique(umfragen$Institut) ) {
 
 }
 
+BTW <- RunSQL(SQL = 'select max(Datum) as Datum from Bundestagswahl;')
+
+BTW$Datum <- as.Date('2021-01-01')
+
 for (P in unique(umfragen$Partei ) ) {
 
-  umfragen %>% filter( Partei == P & Datum > as.Date('2021-12-31') ) %>% ggplot(
+  umfragen %>% filter( Partei == P & Datum >= BTW$Datum ) %>% ggplot(
     aes ( x = Datum, y = Ergebnis )
   ) +
-    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x) +
+#    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x) +
     geom_line( aes(colour = Partei)) +
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
@@ -121,6 +128,9 @@ for (P in unique(umfragen$Partei ) ) {
     expand_limits( y = 0 ) +
     facet_wrap(vars(Institut)) +
     theme_ipsum() +
+    theme(
+      axis.text.x = element_text( angle = 90)
+    ) +
     labs(  title = paste( "Umfragen und Wahlergebnisse Bundestag" )
            , subtitle = paste( P )
            , colour  = "Partei"
@@ -145,7 +155,7 @@ for (P in unique(umfragen$Partei ) ) {
   umfragen %>% filter( Partei == P ) %>% ggplot(
     aes ( x = Datum, y = Ergebnis )
   ) +
-    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x ) +
+#    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x ) +
     geom_line( aes(colour = Partei)) +
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
@@ -169,7 +179,7 @@ for (P in unique(umfragen$Partei ) ) {
                               , sep='')
             , plot = PT
             , device = "png"
-            , bg = "lightgrey"
+            , bg = "white"
             , width = 1920
             , height = 1080
             , units = "px"
