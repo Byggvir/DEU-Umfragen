@@ -88,10 +88,10 @@ for (wahljahr in c(2013,2017,2021)) {
     , plot = pp
     , device = 'png'
     , bg = "white"
-    , width = 880
-    , height = 440
+    , width = 1920
+    , height = 1080
     , units = "px"
-    , dpi = 150
+    , dpi = 144
   )
   
 
