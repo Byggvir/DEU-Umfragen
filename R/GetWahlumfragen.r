@@ -45,12 +45,18 @@ source("R/lib/Institute.r")
 Institute <- RunSQL( 'select * from Institute;')
 Parteien <- RunSQL( 'select * from Partei;' )
 
-CSVOUT <- '/tmp/Umfragen.csv'
+CSVOUT1 <- '/tmp/Ergebnisse.csv'
+CSVOUT2 <- '/tmp/Umfragen.csv'
 
-if (file.exists(CSVOUT)) {
+if (file.exists(CSVOUT1)) {
 
-  unlink(CSVOUT)
+  unlink(CSVOUT1)
 
+}
+if (file.exists(CSVOUT2)) {
+  
+  unlink(CSVOUT2)
+  
 }
 
 for (INo in 1:nrow(Institute)) {
@@ -80,7 +86,7 @@ for (INo in 1:nrow(Institute)) {
   namen <- colnames( umfragen )
   
   for (i in 2:(NoParteien - 1) ) {
-  
+      
       umfragen[, i] <- as.numeric( 
                           str_replace(
                             str_replace(
@@ -98,11 +104,12 @@ for (INo in 1:nrow(Institute)) {
                             , "0" 
                             ) 
                           )
-  
+      
+      umfragen[is.na(umfragen[, i]), i] <- 0.0
   } # end for
 
   umfragen[,NoParteien] <- 100 - rowSums( umfragen[, 2:(NoParteien - 1) ])
-  umfragen$Befragte[ umfragen$Befragte == 'Bundestagswahl' ] <- NA
+  umfragen$Befragte[ umfragen$Befragte == 'Bundestagswahl' ] <- -1
 
   umfragen$Befragte <- as.numeric(
                           str_remove(
@@ -117,25 +124,41 @@ for (INo in 1:nrow(Institute)) {
   Datum <- as.Date( NULL )
   Ergebnis <- as.numeric( NULL )
   Parteiname <- NULL
+  PId <- NULL
   Befragte <- as.numeric( NULL )
   
   for ( i in 2:NoParteien ) {
   
     Datum <- c( Datum, umfragen$Datum )    
+    PId <- c( PId, rep( Parteien$Id[match(colnames( umfragen )[i], Parteien$Shortcut)], nrow( umfragen ) ) )
+#    Parteiname <- c( Parteiname, rep( colnames( umfragen )[i], nrow( umfragen ) ) )
     Ergebnis <- c( Ergebnis, umfragen[, i]/100)
-    Parteiname <- c( Parteiname, rep( colnames( umfragen )[i], nrow( umfragen ) ) )
-    Befragte <- c( Befragte, umfragen$Befragte )
-  
+    
   }
-
+  
+  write.table( data.table(
+    Datum = umfragen$Datum
+    , Institut = rep( Institute$Id[ INo ], nrow(umfragen) )
+    , Parliament_ID = 0
+    , Befragte = umfragen$Befragte
+  )
+  , file = CSVOUT2
+  , append = TRUE
+  , sep = ';'
+  , dec = '.'
+  , quote = FALSE
+  , row.names = FALSE
+  , col.names = FALSE
+  )
+  
   write.table( data.table(
       Datum = Datum
       , Institut = rep( Institute$Id[ INo ], length( Datum ) )
-      , Partei = Parteiname
+      , PId = PId
+#      , Parteiname = Parteiname
       , Ergebnis = Ergebnis
-      , Befragte = Befragte
     )
-    , file = CSVOUT
+    , file = CSVOUT1
     , append = TRUE
     , sep = ';'
     , dec = '.'

@@ -52,7 +52,6 @@ args = commandArgs(trailingOnly=TRUE)
 
 if (length(args) == 0) {
   FromDay <- NA
-  
 } else if (length(args) == 1) {
   FromDay <- as.Date(args[1])
 }
@@ -62,24 +61,23 @@ dir.create( outdir , showWarnings = FALSE, recursive = FALSE, mode = "0777")
 
 citation <- paste( '© Thomas Arend, 2022\nQuelle: © wahlrecht.de/umfragen / wahlkreisprognose.de\nStand', heute)
 
-Parteien <- RunSQL( 'select * from Partei;')
 
-umfragen <- RunSQL('select U.*,I.*,P.Id as PId, P.Color,P.Fill from Umfragen as U join ( select max(Datum) as Datum, IId from Umfragen group by IId ) as D on D.Datum=U.Datum and D.IId
-= U.IId join Institute as I on I.Id = U.IId join Partei as P on P.Partei = U.Partei where U.Ergebnis > 0 order by I.Id, P.Id;')
+umfragen <- RunSQL( 'select * from LetzteErgebnisse;')
+Parteien <- RunSQL( 'select distinct P.* from Partei as P join LetzteErgebnisse as E on E.Partei_ID = P.Id;')
 
-umfragen$Institut <- factor( umfragen$IId, levels = Institute$Id, labels = Institute$Shortname) 
-umfragen$Partei <- factor(umfragen$PId,levels = Parteien$Id, labels = Parteien$Partei)
+umfragen$Institut <- factor( umfragen$Institute_ID, levels = Institute$Id, labels = Institute$Shortname) 
+umfragen$Partei <- factor(umfragen$Partei_ID,levels = Parteien$Id, labels = Parteien$Shortcut)
 
 umfragen %>% filter( Ergebnis > 0 ) %>% ggplot(
     aes ( x = '', y = Ergebnis, fill = Partei  )
     ) +
   geom_bar( stat="identity" ) +
   coord_polar( 'y', start = 0, direction = -1 ) +
-  scale_fill_manual( breaks = Parteien$Partei, values = Parteien$Fill) +
+  scale_fill_manual( breaks = Parteien$Shortcut, values = Parteien$Fill) +
   geom_label( 
     aes( label = paste( Ergebnis * 100,'%' ) ), 
     position = position_stack( vjust = 0.5 ),
-    color = rep( c('white',rep('black',6)),nrow(umfragen)/7) ,
+    color = rep(Parteien$Color , 10) ,
     label.size = 0.1,
     size = 3, 
     show.legend = FALSE ) +
@@ -151,7 +149,7 @@ umfragen %>% filter( Ergebnis > 0 ) %>% ggplot(
   )
 
   Spanne <-  RunSQL('select * from Spanne;')
-  Spanne$Partei <- factor(Spanne$PId,levels = Parteien$Id, labels = Parteien$Partei)
+  Spanne$Partei <- factor(Spanne$Partei_ID,levels = Parteien$Id, labels = Parteien$Shortcut)
   
   Spanne %>% filter( Ergebnis > 0 ) %>% ggplot(
     aes ( x = Partei, y = Ergebnis, group = Spanne, fill = Partei )

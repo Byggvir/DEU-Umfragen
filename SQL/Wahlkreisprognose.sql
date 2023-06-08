@@ -1,13 +1,21 @@
 use Umfragen;
-
+/*
 drop table if exists wkp;
 
-create temporary table wkp 
-  ( Datum date
-  , Befragte bigint(20)
+create table wkp 
+  ( Datum DATE
+  , Befragte BIGINT(20)
   , primary key (Datum)
   ) 
-select Datum, Befragte from wahlkreisprognose;
+select Datum from Umfragen where Institute_ID = 10 ;
+*/
+/*
+LOAD DATA LOCAL 
+INFILE '/data/git/R/DEU-Umfragen/data/befragte.csv'      
+INTO TABLE `wkp`
+FIELDS TERMINATED BY ';'
+IGNORE 0 ROWS;
+*/
 
 drop table if exists wahlkreisprognose;
 create table if not exists wahlkreisprognose
@@ -19,7 +27,6 @@ create table if not exists wahlkreisprognose
   , AFD double
   , LINKE double
   , Sonstige double
-  , Befragte bigint(20) default 1300
   , primary key (Datum));
 
 LOAD DATA LOCAL 
@@ -28,16 +35,15 @@ INTO TABLE `wahlkreisprognose`
 FIELDS TERMINATED BY ';'
 IGNORE 0 ROWS;
 
-update wahlkreisprognose as w join wkp as b on w.Datum = b.Datum set w.Befragte = b.Befragte; 
+insert into Umfragen select Datum, 10, 0 , 0 from wahlkreisprognose;
+update Umfragen as U join wkp as W on U.Datum = W.Datum and U.Institute_ID = 10  set U.Befragte = W.Befragte; 
 
-delete from Umfragen where IId = 10;
+delete from Ergebnisse where Institute_ID = 10;
 
-insert into Umfragen select Datum, 10, 'SPD', SPD /100, Befragte from wahlkreisprognose; 
-insert into Umfragen select Datum, 10, 'CDU/CSU', CDU/100, Befragte from wahlkreisprognose;
-insert into Umfragen select Datum, 10, 'GRÜNE', GRUENE/100, Befragte from wahlkreisprognose;
-insert into Umfragen select Datum, 10, 'FDP', FDP/100, Befragte from wahlkreisprognose;
-insert into Umfragen select Datum, 10, 'AfD', AFD/100, Befragte from wahlkreisprognose;
-insert into Umfragen select Datum, 10, 'LINKE', LINKE/100, Befragte from wahlkreisprognose;
-insert into Umfragen select Datum, 10, 'Sonstige', Sonstige/100, Befragte from wahlkreisprognose;
-
-
+insert into Ergebnisse select Datum, 10, 0, Sonstige / 100 from wahlkreisprognose;
+insert into Ergebnisse select Datum, 10, 1, CDU / 100 from wahlkreisprognose;
+insert into Ergebnisse select Datum, 10, 2, SPD / 100 from wahlkreisprognose; 
+insert into Ergebnisse select Datum, 10, 3, FDP / 100 from wahlkreisprognose;
+insert into Ergebnisse select Datum, 10, 4, GRUENE / 100 from wahlkreisprognose;
+insert into Ergebnisse select Datum, 10, 5, LINKE / 100 from wahlkreisprognose;
+insert into Ergebnisse select Datum, 10, 7, AFD / 100 from wahlkreisprognose;

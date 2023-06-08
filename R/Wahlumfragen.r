@@ -61,14 +61,16 @@ dir.create( outdir , showWarnings = FALSE, recursive = FALSE, mode = "0777")
 
 citation <- paste( '© Thomas Arend, 2022\nQuelle: © wahlrecht.de/umfragen\nStand', heute)
 
-Parteien <- RunSQL( 'select * from Partei;')
+Parteien <- RunSQL( 'select distinct P.* from Partei as P join Ergebnisse as E on P.Id = E.Partei_ID;')
 
-umfragen <- RunSQL('select U.*,I.*,P.Id as PId from Umfragen as U join Institute as I on U.IId = I.Id join Partei as P on P.Partei = U.Partei;')
+umfragen <- RunSQL('select * from UmfrageErgebnisse;')
 
-umfragen$Institut <- factor( umfragen$IId, levels = Institute$Id, labels = Institute$Shortname) 
-umfragen$Partei <- factor(umfragen$PId,levels = Parteien$Id, labels = Parteien$Partei)
+umfragen$Institut <- factor( umfragen$Institute_ID, levels = Institute$Id, labels = Institute$Shortname) 
+umfragen$Partei <- factor( umfragen$Partei_ID, levels = Parteien$Id, labels = Parteien$Shortcut)
 
 for (I in unique(umfragen$Institut) ) {
+  
+  # cat("---", I, "---\n\n")
   
   umfragen %>% filter( Institut == I ) %>% ggplot(
     aes ( x = Datum, y = Ergebnis, colour = Partei )
@@ -79,7 +81,7 @@ for (I in unique(umfragen$Institut) ) {
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     scale_x_date( date_labels = "%Y" ) +
     scale_y_continuous( labels = scales::percent ) +
-    scale_color_manual( breaks = Parteien$Partei, values = Parteien$Fill ) +
+    scale_color_manual( breaks = Parteien$Shortcut, values = Parteien$Fill ) +
     expand_limits( y = 0 ) +
     facet_wrap(vars(Partei)) +
     theme_ipsum() +
@@ -109,22 +111,25 @@ for (I in unique(umfragen$Institut) ) {
 
 }
 
+
 BTW <- RunSQL(SQL = 'select max(Datum) as Datum from Bundestagswahl;')
 
 BTW$Datum <- as.Date('2021-01-01')
 
-for (P in unique(umfragen$Partei ) ) {
-
+for (P in unique(Parteien$Shortcut ) ) {
+  
+  cat('\n---', P, '---\n\n')
+  
   umfragen %>% filter( Partei == P & Datum >= BTW$Datum ) %>% ggplot(
     aes ( x = Datum, y = Ergebnis )
   ) +
 #    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x) +
-    geom_line( aes(colour = Partei)) +
+    geom_line( aes(colour = Partei) ) +
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
-    geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
+#    geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei_ID == P ), size = 3 )+
     scale_x_date( date_labels = "%Y-%b" ) +
     scale_y_continuous( labels = scales::percent ) +
-    scale_color_manual( breaks = Parteien$Partei, values = Parteien$Fill ) +
+    scale_color_manual( breaks = Parteien$Shortcut, values = Parteien$Fill ) +
     expand_limits( y = 0 ) +
     facet_wrap(vars(Institut)) +
     theme_ipsum() +
@@ -145,7 +150,7 @@ for (P in unique(umfragen$Partei ) ) {
                               , sep='')
             , plot = PT
             , device = "png"
-            , bg = "lightgrey"
+            , bg = "white"
             , width = 1920
             , height = 1080
             , units = "px"
@@ -155,13 +160,12 @@ for (P in unique(umfragen$Partei ) ) {
   umfragen %>% filter( Partei == P ) %>% ggplot(
     aes ( x = Datum, y = Ergebnis )
   ) +
-#    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x ) +
     geom_line( aes(colour = Partei)) +
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
     scale_x_date( date_labels = "%Y-%b" ) +
     scale_y_continuous( labels = scales::percent ) +
-    scale_color_manual( breaks = Parteien$Partei, values = Parteien$Fill ) +
+    scale_color_manual( breaks = Parteien$Shortcut, values = Parteien$Fill ) +
     expand_limits( y = 0 ) +
     facet_wrap(vars(Institut)) +
     theme_ipsum() +
@@ -188,9 +192,9 @@ for (P in unique(umfragen$Partei ) ) {
   
 }
 
-  
-  umfragen %>% filter( ! is.na(Befragte) & Befragte > 0 )  %>% ggplot(
-    aes ( x = Shortname, y = Befragte )
+  Befragte <- RunSQL ('select I.Shortname as Institut, U.Befragte as Befragte from Umfragen as U join Institute as I on U.Institute_ID = I.`Id`;')
+  Befragte %>% filter( ! is.na(Befragte) & Befragte > 0 )  %>% ggplot(
+    aes ( x = Institut, y = Befragte )
   ) +
     geom_boxplot(  ) +
     expand_limits( y = 0 ) +
@@ -217,4 +221,3 @@ for (P in unique(umfragen$Partei ) ) {
             , units = "px"
             , dpi = 144
   )
-  
