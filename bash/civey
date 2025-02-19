@@ -1,0 +1,7 @@
+#!/bin/bash
+
+wget -O - "https://civey.com/umfragen/37307/wen-wurden-sie-wahlen-wenn-am-sonntag-bundestagswahl-ware" \
+| sed 's#,#,\n#g; s#<#\n<#g; s#{#\n{#g; s#}#\n}#g;' \
+| sed '1,/<script id="__NEXT_DATA__"/d; /<\/script>/,$d' \
+| tr -d '\r\n' \
+> ../data/civey.json

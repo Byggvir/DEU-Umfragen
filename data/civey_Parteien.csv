@@ -1,0 +1,30 @@
+Id;CId;text;label
+0;;Eine andere Partei;SONSTIGE
+1;;CDU/CSU;CDU_CSU
+2;;SPD;SPD
+3;;FDP;FDP
+4;;GRÜNE;GRUENE
+5;;LINKE;LINKE
+6;;Piratenpartei;PIRATEN
+8;;FREIE WÄHLER;FW
+9;;NPD;NPD
+10;;SSW;SSW
+11;;BAYERNPARTEI;BAYERNPARTEI
+12;;ÖDP;ÖPP
+13;;DIE PARTEI;DIE PARTEI
+14;;BVB/FW;BVB_FW
+15;;Tierschutzpartei;Partei Mensch Umwelt Tierschutz;orange;black
+16;;BIW;BIW
+17;;Familie;Familie
+18;;Volt;Volt
+21;;bunt.saar;bunt.saar
+22;;BFTH;BFTH
+23;;BSW;BSW
+24;;Plus Brandenburg;Plus Brandenburg;lightgrey;black
+25;;WU;WU
+101;;CDU;CDU
+102;;CSU;CSU
+900;;REP;REP
+901;;PDS;PDS
+902;;LINKE.PDS;LINKE.=DS
+999;;NICHTWÄHLER;NICHTWAEHLER
