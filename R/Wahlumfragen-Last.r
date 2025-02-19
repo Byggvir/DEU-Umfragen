@@ -2,8 +2,6 @@
 
 options(OutDec=',')
 
-MyScriptName <- "Wahlumfragen"
-
 require(data.table)
 library(tidyverse)
 library(grid)
@@ -11,10 +9,11 @@ library(gridExtra)
 library(gtable)
 library(lubridate)
 library(ggplot2)
+library(ggrepel)
 library(viridis)
 library(hrbrthemes)
 library(scales)
-library(Cairo)
+library(ragg)
 library(XML)
 library(RCurl)
 library(rlist)
@@ -59,7 +58,7 @@ if (length(args) == 0) {
 outdir <- 'png/Umfragen/'
 dir.create( outdir , showWarnings = FALSE, recursive = FALSE, mode = "0777")
 
-citation <- paste( '© Thomas Arend, 2022\nQuelle: © wahlrecht.de/umfragen / wahlkreisprognose.de\nStand', heute)
+citation <- paste( '© Thomas Arend, 2025\nQuelle: © wahlrecht.de/umfragen / wahlkreisprognose.de\nStand', heute)
 
 
 umfragen <- RunSQL( 'select * from LetzteErgebnisse;')
@@ -68,27 +67,37 @@ Parteien <- RunSQL( 'select distinct P.* from Partei as P join LetzteErgebnisse 
 umfragen$Institut <- factor( umfragen$Institute_ID, levels = Institute$Id, labels = Institute$Shortname) 
 umfragen$Partei <- factor(umfragen$Partei_ID,levels = Parteien$Id, labels = Parteien$Shortcut)
 
+umfragen[Institute_ID == 24, Ergebnis := hn_round(Ergebnis,1000)/1000]
+
 umfragen %>% filter( Ergebnis > 0 ) %>% ggplot(
     aes ( x = '', y = Ergebnis, fill = Partei  )
     ) +
-  geom_bar( stat="identity" ) +
-  coord_polar( 'y', start = 0, direction = -1 ) +
-  scale_fill_manual( breaks = Parteien$Shortcut, values = Parteien$Fill) +
-  geom_label( 
-    aes( label = paste( Ergebnis * 100,'%' ) ), 
+  geom_bar( stat="identity" , alpha = 1) +
+  geom_label_repel(
+    aes( label = paste( Ergebnis * 100,'%' ), colour = Partei ),
     position = position_stack( vjust = 0.5 ),
-    color = rep(Parteien$Color , 10) ,
+  #  fill = 'white' ,
     label.size = 0.1,
-    size = 3, 
+    size = 3,
     show.legend = FALSE ) +
-  facet_wrap(vars(paste(Institut,Datum, '\nBefragte:', Befragte)), nrow = 2) +
-  theme_void() +
-  labs(  title = paste( "Umfragen Bundestag" )
+  scale_colour_manual( values = Parteien$Color, breaks = Parteien$Shortcut ) +
+  scale_fill_manual( breaks = Parteien$Shortcut, values = Parteien$Fill) +
+  facet_wrap(vars(paste(Institut,Datum, '\nBefragte:', Befragte)), nrow = 2 ) +
+  coord_polar( 'y', start = 0, direction = -1 ) +
+  labs(  title = paste( "Sonntagsfrage zur Bundestagswahl - Prognosen" )
            , subtitle = 'Letzte Umfragen nach Institut'
            , colour  = "Partei"
            , x = ''
            , y = 'Ergebnis'
-           , caption = citation )  -> PieChart
+           , caption = citation ) +
+  theme_minimal() +
+  theme( axis.title.x=element_blank(),
+         axis.text.x=element_blank(),
+         axis.ticks.x=element_blank(),
+         panel.border = element_blank(), 
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank()
+  ) -> PieChart
   
   ggsave(   filename = paste( outdir
                              , 'LetzteUmfrage'
@@ -124,7 +133,7 @@ umfragen %>% filter( Ergebnis > 0 ) %>% ggplot(
     facet_wrap(vars(Partei), nrow = 2) +
     scale_y_continuous( labels = scales::percent ) +
     scale_fill_manual( breaks = Parteien$Partei, values = Parteien$Fill) +
-    labs(  title = paste( "Umfragen Bundestag" )
+    labs(  title = paste( "Sonntagsfrage zur Bundestagswahl - Prognosen" )
            , subtitle = 'Letzte Umfragen nach Institut'
            , colour  = "Partei"
            , x = 'Institute'
@@ -184,7 +193,7 @@ umfragen %>% filter( Ergebnis > 0 ) %>% ggplot(
     expand_limits( y = 0.4 ) +
     scale_y_continuous( labels = scales::percent ) +
     scale_fill_manual( breaks = Parteien$Partei, values = Parteien$Fill) +
-    labs(  title = paste( "Sonntagsfrage zum Bundestag" )
+    labs(  title = paste( "Sonntagsfrage zur Bundestagswahl - Prognosen" )
            , subtitle = 'Letzte Umfragen - Minumum und Maximum pro Partei'
            , colour  = "Partei"
            , x = 'Partei'

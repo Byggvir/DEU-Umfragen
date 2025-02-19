@@ -1,11 +1,23 @@
-Id,Name,url,Shortname
-1,Allensbach,https://www.wahlrecht.de/umfragen/allensbach.htm,Allensbach,1
-2,Infratest dimap,https://www.wahlrecht.de/umfragen/dimap.htm,Infratest dimap,1
-3,Kantar (Emnid),https://www.wahlrecht.de/umfragen/emnid.htm,Kantar,1
-4,Forsa,https://www.wahlrecht.de/umfragen/forsa.htm,Forsa,1
-5,Ipsos,https://www.wahlrecht.de/umfragen/ipsos.htm,Ipsos,1
-6,Forschungsgruppe Wahlen,https://www.wahlrecht.de/umfragen/politbarometer.htm,FG Wahlen,1
-7,GMS (Gesellschaft für Markt- und Sozialforschung),https://www.wahlrecht.de/umfragen/gms.htm,GMS,1
-8,INSA,https://www.wahlrecht.de/umfragen/insa.htm,INSA,1
-9,YouGov,https://www.wahlrecht.de/umfragen/yougov.htm,YouGov,1
-10,Wahlkreisprognose,https://flo.uri.sh/visualisation/10450101/embed,WKP,0
+Id,Name,Shortname,urlbase,urlsub,urlext,autoupdate
+1,Infratest dimap,Infratest dimap,https://www.wahlrecht.de/umfragen/,dimap,.htm,1
+2,Forsa,Forsa,https://www.wahlrecht.de/umfragen/,forsa,.htm,1
+3,Verian (Kantar Public / Emnid),Verian,https://www.wahlrecht.de/umfragen/,emnid,.htm,1
+4,GMS (Gesellschaft für Markt- und Sozialforschung),GMS,https://www.wahlrecht.de/umfragen/,gms,.htm,1
+5,INSA,INSA,https://www.wahlrecht.de/umfragen/,insa,.htm,1
+6,Forschungsgruppe Wahlen,FG Wahlen,https://www.wahlrecht.de/umfragen/,politbarometer,.htm,1
+7,Trend Research Hamburg,TR Hamburg,,,,0
+9,Allensbach,Allensbach,https://www.wahlrecht.de/umfragen/,allensbach,.htm,1
+11,GESS Phone & Field,GESS,,,,0
+12,uniQma,uniQma,,,,0
+13,YouGov,YouGov,https://www.wahlrecht.de/umfragen/,yougov,.htm,1
+14,dimap,dimap,,,,0
+15,Mentefactum,Mentefactum,,,,0
+16,Civey,Civey,,,,0
+17,Ipsos,Ipsos,https://www.wahlrecht.de/umfragen/,ipsos,.htm,1
+18,Universität Hamburg,Uni HH,,,,0
+20,IM Field,IM Field,,,,0
+21,Policy Matters,Policy Matters,,,,0
+22,pollytix,pollytix,,,,0
+23,Conoscope,Conoscope,,,,0
+24,Institut Wahlkreisprognose,WKP,https://flo.uri.sh/visualisation/10450101/embed,,,0
+25,IFM Berlin,IFM BE,,,,

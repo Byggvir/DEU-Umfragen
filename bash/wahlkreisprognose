@@ -1,10 +1,74 @@
 #!/bin/bash
 
+
 wget -O /tmp/wahlkreisprognose.txt https://flo.uri.sh/visualisation/10450101/embed
+
 cat /tmp/wahlkreisprognose.txt \
-| grep '_Flourish_data =' \
-| sed 's#.*_Flourish_data = {"data":\[##; s#},{#}\n{#g; s#\]},##; s#","#;#g;' \
-| sed ' s#^{"label":"##; s#value":\["##; s#"\]}##' \
+| grep '_Flourish_data = {"data"' \
+| sed 's#{#\n#g;' \
+| sed '1,2d; s#"label":##; s#","value":\[#;#; s#","#;#g; s#\].*##; s#"##g'\
 | sed 's#\([0-9]\{2,2\}\)\.\([0-9]\{2,2\}\)\.\([0-9]\{4,4\}\)#\3-\2-\1#; s#\,#.#g' \
 | sed '/2021-09-26/d' \
-> /tmp/wahlkreisprognose.csv
+> /tmp/wkp_ergebnisse.csv
+
+cat /tmp/wahlkreisprognose.txt \
+| grep '_Flourish_data_column_names =' \
+| sed 's#.*\[#Datum;#; s#\].*##' \
+> /tmp/wahlkreisprognose_parteien.csv
+
+wget -o /dev/null -O /tmp/wkp_last.txt https://flo.uri.sh/visualisation/14249460/embed
+
+cat /tmp/wkp_last.txt \
+| grep Datenbasis \
+| sed 's#.*Datenbasis.*n=##; s# .*Zeitraum: #,#; s# I stat. Fehler.*##; s#\.##;s#^#'$(date +%F)',#' \
+>> ../data/wkp_last.csv
+
+
+# Aktueller Trend auf der Seite trends-im-bund
+
+# https://flo.uri.sh/visualisation/20391842/embed
+# https://flo.uri.sh/visualisation/20645361/embed
+
+wget -o /dev/null -O /tmp/trends-im-bund.txt https://www.wahlkreisprognose.de/trends-im-bund/
+
+URLTREND=$(grep -A 2 ZWEITSTIMMEN /tmp/trends-im-bund.txt | sed '1,2d; s#.*<iframe src="##; s#".*##' )
+ID_TREND=$(grep -A 2 ZWEITSTIMMEN /tmp/trends-im-bund.txt | sed '1,2d; s#.*<iframe src="##; s#".*##;s#.*/\([0-9]\{8\}\)/.*#\1#' )
+
+if [ -n $ID_TREND ]
+then
+    echo "insert into wkp_trend_ids select * from ( select $ID_TREND ) as T where not exists ( select ID from wkp_trend_ids where ID = $ID_TREND ) LIMIT 1;" \
+    | mysql --user=''@'localhost' Umfragen
+fi
+
+[ -e /tmp/wkp_trend_ergebnis.csv ] && rm /tmp/wkp_trend_ergebnis.csv
+[ -e /tmp/wkp_trend_umfragen.csv ] && rm /tmp/wkp_trend_umfragen.csv
+
+
+for I in $( echo "select * from wkp_trend_ids;" | mysql --user=''@'localhost' Umfragen | sed '1d' )
+do 
+    echo $I
+    wget -o /dev/null -O /tmp/wkp_trend.txt https://flo.uri.sh/visualisation/$I/embed
+
+    cat /tmp/wkp_trend.txt \
+    | grep  Zeitraum \
+    | sed 's#.*"layout.source_name":"##;s#","layout.source_name_2".*##' \
+    | sed 's#.*n=\([0-9]*\)\.\([0-9]\{3\}\).*\([0-9]\{2\}\)\.\([0-9]\{2\}\)\.\([0-9]\{4\}\).*#0,\5-\4-\3,24,0,\1\2#' \
+    >> /tmp/wkp_trend_umfragen.csv
+
+    DATUM=$(cat /tmp/wkp_trend.txt \
+    | grep  Zeitraum \
+    | sed 's#.*"layout.source_name":"##;s#","layout.source_name_2".*##' \
+    | sed 's#.*\([0-9]\{2\}\)\.\([0-9]\{2\}\)\.\([0-9]\{4\}\).*#\3-\2-\1#' )
+    
+    echo $DATUM
+    
+    cat /tmp/wkp_trend.txt \
+    | grep '_Flourish_data = ' \
+    | sed 's#"label"# \n"label"#g' \
+    | grep 'label' \
+    | sed 's#"label":"\([^"]*\)","metadata":\["\([^"]*\)".*#'$DATUM';24;\1;\2#;s#,#\.#g' \
+    | sed 's#CDU/CSU#1#; s#SPD#2#; s#FDP#3#; s#GRÜNE#4#; s#LINKE#5#; s#AFD#7#; s#BSW#23#; s#FREIE WÄHLER#8#; s#ANDERE#0#' \
+    | awk -F ';' '{ print($1 "," $2 "," $3 "," $4/100 )}' \
+    >> /tmp/wkp_trend_ergebnis.csv
+
+done

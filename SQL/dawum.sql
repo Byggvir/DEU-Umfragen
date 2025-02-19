@@ -11,7 +11,7 @@ use Umfragen;
   
 */
 
-/* Create and lod decrition of database */
+/* Create and load data set of database */
 
 drop table if exists `db`;
 create table if not exists `db`
@@ -27,12 +27,12 @@ create table if not exists `db`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Database.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Database.csv'      
 INTO TABLE `db`
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 IGNORE 1 ROWS;
 
-/* Create and load decrition of Parliaments */
+/* Create and load data set of Parliaments */
 
 drop table if exists `Parliaments`;
 create table if not exists `Parliaments`
@@ -46,12 +46,12 @@ create table if not exists `Parliaments`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Parliaments.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Parliaments.csv'      
 INTO TABLE `Parliaments`
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 IGNORE 1 ROWS;
 
-/* Create and load decrition of Institutes */
+/* Create and load  data set of Institutes */
 
 drop table if exists `Institutes`;
 create table if not exists `Institutes`
@@ -63,12 +63,12 @@ create table if not exists `Institutes`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Institutes.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Institutes.csv'      
 INTO TABLE `Institutes`
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 IGNORE 1 ROWS;
 
-/* Create and load decrition of Taskers */
+/* Create and load  data set of Taskers */
 
 drop table if exists `Taskers`;
 create table if not exists `Taskers`
@@ -80,12 +80,12 @@ create table if not exists `Taskers`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Taskers.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Taskers.csv'      
 INTO TABLE `Taskers`
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 IGNORE 1 ROWS;
 
-/* Create and load decrition of Taskers */
+/* Create and load data set of Taskers */
 
 drop table if exists `Methods`;
 create table if not exists `Methods`
@@ -97,12 +97,12 @@ create table if not exists `Methods`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Methods.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Methods.csv'      
 INTO TABLE `Methods`
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 IGNORE 1 ROWS;
 
-/* Create and load decrition of Parties */
+/* Create and load data set of Parties */
 
 drop table if exists `Parties`;
 create table if not exists `Parties`
@@ -114,12 +114,12 @@ create table if not exists `Parties`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Parties.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Parties.csv'      
 INTO TABLE `Parties`
-FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+FIELDS TERMINATED BY ';' ENCLOSED BY '"'
 IGNORE 1 ROWS;
 
-/* Create and load decrition of Surveys */
+/* Create and load data set of Surveys */
 
 drop table if exists `Surveys`;
 create table if not exists `Surveys`
@@ -145,12 +145,12 @@ create table if not exists `Surveys`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Surveys.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Surveys.csv'      
 INTO TABLE `Surveys`
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 IGNORE 1 ROWS;
 
-/* Create and load decrition of Results */
+/* Create and load data set of Results */
 
 drop table if exists `Results`;
 create table if not exists `Results`
@@ -162,7 +162,7 @@ create table if not exists `Results`
 ;
 
 LOAD DATA LOCAL 
-INFILE '/data/git/R/DEU-Umfragen/data/Results.csv'      
+INFILE '/data/git/R/DEU-Umfragen/data/dawum/Results.csv'      
 INTO TABLE `Results`
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 IGNORE 1 ROWS;

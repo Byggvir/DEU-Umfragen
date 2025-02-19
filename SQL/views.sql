@@ -69,13 +69,10 @@ where
 
 create or replace view LastSurveys as
 select 
-    S.*
-    , I.`Name` as `Name`
-    ,  max(`Date`) as `Date_Last`
+      Institute_ID
+    , Parliament_ID
+    , max(`Date`) as `Date_Last`
 from Surveys as S 
-join Institutes as I
-on 
-    S.`Institute_ID` = I.`Id` 
 group by 
     S.`Institute_ID`
     , S.`Parliament_ID`
@@ -83,15 +80,23 @@ group by
 
 create or replace view LastSurveyResults as
 select 
-    L.*
-    , P.Name as Partyname
+    S.*
+    , P.Id as Party_ID
+    , P.Color as Color
+    , P.Fill as Fill
     , R.Result as Result
 from LastSurveys as L
+join Surveys as S
+on 
+    S.Institute_ID = L.Institute_ID
+    and S.Parliament_ID = L.Parliament_ID
+    and S.`Date` = L.Date_Last
 join Results as R
-on L.`Id` = R.`Survey_ID`
-join Parties as P
+on S.`Id` = R.`Survey_ID`
+join Partei as P
 on R.Party_ID = P.`Id`
-
+order by
+    Institute_ID, Party_ID
 ;
 
 create or replace view `Spanne` AS 
@@ -111,7 +116,6 @@ select
 from `LetzteErgebnisse` 
 group by `Partei_ID` 
 order by `Partei_ID`;
-
 
 CREATE or replace view `Zusammenfassung` as
 

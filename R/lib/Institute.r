@@ -32,5 +32,6 @@ Institute <- data.frame(
     , 'INSA'
     , 'YouGov'
   )
+  , dawum_Id = c( 9 , 1, NA, 2, 17, 6, 4, 5, 13, 24 )
   
 )

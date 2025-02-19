@@ -8,8 +8,6 @@
 # E-Mail: thomas@arend-rhb.de
 #
 
-MyScriptName <-"averages"
-
 #
 # Exponential smoothing
 #

@@ -2,8 +2,6 @@
 
 options(OutDec=',')
 
-MyScriptName <- "Wahlumfragen"
-
 require(data.table)
 library(tidyverse)
 library(grid)
@@ -14,7 +12,7 @@ library(ggplot2)
 library(viridis)
 library(hrbrthemes)
 library(scales)
-library(Cairo)
+library(ragg)
 library(XML)
 library(RCurl)
 library(rlist)
@@ -59,23 +57,23 @@ if (length(args) == 0) {
 outdir <- 'png/Umfragen/'
 dir.create( outdir , showWarnings = FALSE, recursive = FALSE, mode = "0777")
 
-citation <- paste( '© Thomas Arend, 2022\nQuelle: © wahlrecht.de/umfragen\nStand', heute)
+citation <- paste( '© Thomas Arend, 2025\nQuelle: © wahlrecht.de/umfragen\nStand', heute)
 
 Parteien <- RunSQL( 'select distinct P.* from Partei as P join Ergebnisse as E on P.Id = E.Partei_ID;')
 
 umfragen <- RunSQL('select * from UmfrageErgebnisse;')
 
-umfragen$Institut <- factor( umfragen$Institute_ID, levels = Institute$Id, labels = Institute$Shortname) 
-umfragen$Partei <- factor( umfragen$Partei_ID, levels = Parteien$Id, labels = Parteien$Shortcut)
+umfragen[, Institut := factor( Institute_ID, levels = Institute$Id, labels = Institute$Shortname) ]
+umfragen[, Partei := factor( Partei_ID, levels = Parteien$Id, labels = Parteien$Shortcut) ]
 
-for (I in unique(umfragen$Institut) ) {
+for (I in unique(umfragen[,"Institut"]) ) {
   
-  # cat("---", I, "---\n\n")
+  cat("---", I, "---\n\n")
   
   umfragen %>% filter( Institut == I ) %>% ggplot(
     aes ( x = Datum, y = Ergebnis, colour = Partei )
     ) + 
-    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x ) + 
+    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x, show.legend = FALSE ) + 
     geom_line( aes(colour = Partei)) +
     geom_point( data = umfragen %>% filter( is.na(Befragte) & Institut == I ), size = 3 )+
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
@@ -114,34 +112,35 @@ for (I in unique(umfragen$Institut) ) {
 
 BTW <- RunSQL(SQL = 'select max(Datum) as Datum from Bundestagswahl;')
 
-BTW$Datum <- as.Date('2021-01-01')
+BTW[, Datum := as.Date('2021-01-01')]
 
-for (P in unique(Parteien$Shortcut ) ) {
+for ( p in 1:nrow(Parteien) ) {
   
-  cat('\n---', P, '---\n\n')
+  P = Parteien$Shortcut[p]
+  cat('\n---', Parteien$Shortcut[p], '---\n\n')
   
-  umfragen %>% filter( Partei == P & Datum >= BTW$Datum ) %>% ggplot(
+  # umfragen %>% filter( Partei == Parteien[p,"Shortcut"] & Datum >= BTW$Datum ) %>% ggplot(
+    umfragen %>% filter( Partei == P & Datum >= "2022-12-31" & Ergebnis > 0 ) %>% ggplot(
     aes ( x = Datum, y = Ergebnis )
   ) +
-#    geom_smooth( aes(fill = Partei), method = 'glm', formula = y ~ x) +
-    geom_line( aes(colour = Partei) ) +
-    geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
-#    geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei_ID == P ), size = 3 )+
+    geom_smooth( method = 'loess'
+                 , formula = y ~ x
+                 , color = Parteien$Fill[p]
+                 , span = 0.3
+                 , show.legend = FALSE) +
+    geom_point( aes( colour = Institut ), alpha = 0.5 ) +
     scale_x_date( date_labels = "%Y-%b" ) +
     scale_y_continuous( labels = scales::percent ) +
-    scale_color_manual( breaks = Parteien$Shortcut, values = Parteien$Fill ) +
-    expand_limits( y = 0 ) +
-    facet_wrap(vars(Institut)) +
+    labs(  title = paste( "Umfragen und Wahlergebnisse Bundestag" )
+           , subtitle = paste( P )
+           , colour  = "Institut"
+           , x = "Datum"
+           , y = "Ergebnis"
+           , caption = citation )  +
     theme_ipsum() +
     theme(
       axis.text.x = element_text( angle = 90)
-    ) +
-    labs(  title = paste( "Umfragen und Wahlergebnisse Bundestag" )
-           , subtitle = paste( P )
-           , colour  = "Partei"
-           , x = "Datum"
-           , y = "Ergebnis"
-           , caption = citation )  -> PT
+    ) -> PT
 
   ggsave(   filename = paste( outdir
                               , 'Partei_'
@@ -162,19 +161,20 @@ for (P in unique(Parteien$Shortcut ) ) {
   ) +
     geom_line( aes(colour = Partei)) +
     geom_hline(yintercept = 0.05, color = 'red' , linetype = 'dotted') +
-    geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
+#    geom_point( data = umfragen %>% filter( is.na(Befragte) & Partei == P ), size = 3 )+
     scale_x_date( date_labels = "%Y-%b" ) +
     scale_y_continuous( labels = scales::percent ) +
-    scale_color_manual( breaks = Parteien$Shortcut, values = Parteien$Fill ) +
+#    scale_color_manual( breaks = Parteien[,"Shortcut"], values = Parteien[,"Fill"] ) +
     expand_limits( y = 0 ) +
     facet_wrap(vars(Institut)) +
-    theme_ipsum() +
     labs(  title = paste( "Umfragen und Wahlergebnisse Bundestag" )
            , subtitle = paste( P )
            , colour  = "Partei"
            , x = "Datum"
            , y = "Ergebnis"
-           , caption = citation )  -> PT
+           , caption = citation ) + 
+  theme() +
+  theme_ipsum()  -> PT
   
   ggsave(   filename = paste( outdir
                               , 'Partei_'
@@ -196,18 +196,18 @@ for (P in unique(Parteien$Shortcut ) ) {
   Befragte %>% filter( ! is.na(Befragte) & Befragte > 0 )  %>% ggplot(
     aes ( x = Institut, y = Befragte )
   ) +
-    geom_boxplot(  ) +
-    expand_limits( y = 0 ) +
-    theme_ipsum() +
-    theme (
-      axis.text.x = element_text(angle = 90)
-    ) +
-    labs(  title = paste( "Befragte nach Institut" )
+   geom_boxplot(  ) +
+   expand_limits( y = 0 ) +
+   labs(  title = paste( "Befragte nach Institut" )
            , subtitle = ''
            , colour  = "Institut"
            , x = "Institut"
            , y = "Befragte"
-           , caption = citation )  -> IB
+           , caption = citation ) +
+  theme_ipsum() +
+    theme (
+      axis.text.x = element_text(angle = 90)
+    ) -> IB
   
   ggsave(   filename = paste( outdir
                               , 'Befragte' 
